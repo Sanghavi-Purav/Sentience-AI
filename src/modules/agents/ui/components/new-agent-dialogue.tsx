@@ -19,7 +19,10 @@ export const NewAgentDialogue = ({
       title="New Agent"
       description="Create a new Agent"
     >
-      <AgentForm/>
+      <AgentForm
+        onSuccess={() => onOpenChange(false)}
+        onCancel={() => onOpenChange(false)}
+      />
     </ResponsiveDialogue>
   );
 };
