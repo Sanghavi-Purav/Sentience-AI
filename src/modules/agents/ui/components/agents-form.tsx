@@ -78,6 +78,7 @@ export const AgentForm = ({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Image
           src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(
+
             watchedName || "default"
           )}`}
           width={80}
