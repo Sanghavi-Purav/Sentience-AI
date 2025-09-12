@@ -23,7 +23,7 @@ import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 const formSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   password: z.string().min(8, "Password is required"),
 });
 
