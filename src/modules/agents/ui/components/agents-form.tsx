@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { agentsInsertSchema } from "../../schemas";
+import { agentsEditSchema, agentsInsertSchema } from "../../schemas";
 import {
   Form,
   FormControl,
@@ -39,17 +39,28 @@ export const AgentForm = ({
   const createAgents = useMutation(
     trpc.agents.createAgents.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.agents.getMany.queryOptions());
-        if (initialValues?.id) {
-          queryClient.invalidateQueries(
-            trpc.agents.getOne.queryOptions({ id: initialValues?.id })
-          );
-        }
+        queryClient.invalidateQueries(trpc.agents.getMany.queryOptions({}));
         onSuccess?.();
       },
       onError: () => {},
     })
   );
+
+  const editAgents = useMutation(
+    trpc.agents.Edit.mutationOptions({
+      onSuccess: () => {
+        trpc.agents.getMany.queryOptions({});
+        if (initialValues) {
+          queryClient.invalidateQueries(
+            trpc.agents.getOne.queryOptions({ id: initialValues.id })
+          );
+          onSuccess?.();
+        }
+      },
+    })
+  );
+
+  const isEdit = !!initialValues?.id;
 
   const form = useForm<agentsFormData>({
     resolver: zodResolver(agentsInsertSchema),
@@ -60,15 +71,14 @@ export const AgentForm = ({
   });
   const watchedName = form.watch("name");
 
-  const isEdit = !!initialValues?.id;
-  const isPending = createAgents.isPending;
+  const isPending = createAgents.isPending || editAgents.isPending;
 
   const onSubmit = ({
     name,
     instructions,
   }: z.infer<typeof agentsInsertSchema>) => {
     if (isEdit) {
-      console.log("edit in progress");
+      editAgents.mutate({ name, instructions, id: initialValues.id });
     } else {
       createAgents.mutate({ name, instructions });
     }
@@ -78,7 +88,6 @@ export const AgentForm = ({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Image
           src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(
-
             watchedName || "default"
           )}`}
           width={80}
