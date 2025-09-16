@@ -1,8 +1,4 @@
-import {
-  createTRPCRouter,
-  baseProcedure,
-  protectedProcedure,
-} from "@/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { db } from "@/db";
 import { agents } from "@/db/schema";
 import { agentsEditSchema, agentsInsertSchema } from "../schemas";
@@ -27,6 +23,7 @@ export const agentsRouter = createTRPCRouter({
           .max(MAX_PAGE_SIZE)
           .default(DEFAULT_PAGE_SIZE),
         search: z.string().default(""),
+        
       })
     )
     .query(async ({ input, ctx }) => {
