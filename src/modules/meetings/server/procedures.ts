@@ -9,7 +9,8 @@ import {
   MAX_PAGE_SIZE,
   MIN_PAGE_SIZE,
 } from "@/constants";
-import { and, count, desc, eq, ilike } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
+import { meetingsInsertSchema } from "../schema";
 
 export const meetingsRouter = createTRPCRouter({
   getMany: protectedProcedure
@@ -80,5 +81,54 @@ export const meetingsRouter = createTRPCRouter({
 
       const totalPages = Math.ceil(total.count / pageSize);
       return { items: data, total: total.count, totalPages };
+    }),
+  getOne: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const [currentMeeting] = await db
+        .select({
+          ...getTableColumns(meetings),
+          agents: {
+            name: agents.name,
+          },
+        })
+        .from(meetings)
+        .leftJoin(agents, eq(meetings.agentId, agents.id))
+        .where(
+          and(eq(meetings.id, input.id), eq(meetings.userId, ctx.auth.user.id))
+        );
+      if (!currentMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meeting not found",
+        });
+      }
+      return currentMeeting;
+    }),
+  createMeetings: protectedProcedure
+    .input(meetingsInsertSchema)
+    .mutation(async ({ input, ctx }) => {
+      if (input.agentId) {
+        const [agent] = await db
+          .select(getTableColumns(agents))
+          .from(agents)
+          .where(
+            and(
+              eq(agents.id, input.agentId),
+              eq(agents.userId, ctx.auth.user.id)
+            )
+          );
+        if (!agent) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "This Agent does not exist",
+          });
+        }
+      }
+
+      const [createdMeeting] = await db
+        .insert(meetings)
+        .values({ ...input, agentId: input.agentId, userId: ctx.auth.user.id })
+        .returning();
     }),
 });
