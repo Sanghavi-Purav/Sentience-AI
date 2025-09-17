@@ -126,6 +126,10 @@ export const meetingsRouter = createTRPCRouter({
         }
       }
 
+      if(input.status==="upcoming"){
+        
+      }
+
       const [createdMeeting] = await db
         .insert(meetings)
         .values({ ...input, agentId: input.agentId, userId: ctx.auth.user.id })

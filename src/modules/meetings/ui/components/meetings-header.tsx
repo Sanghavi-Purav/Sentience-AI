@@ -22,6 +22,7 @@ export const MeetingsHeader = () => {
         open={dialogueOpen}
         onOpenChange={setDialogueOpen}
         isEdit={false}
+        isInstant={isInstant}
       />
       <div className="py-4 px-4 md:px-8 flex flex-col gap-y-4">
         <div className="flex items-center justify-between ">
@@ -59,29 +60,3 @@ export const MeetingsHeader = () => {
     </>
   );
 };
-
-// <DropdownMenu modal={false}>
-//         <DropdownMenuTrigger asChild>
-//           <Button variant="ghost">
-//             <MoreVerticalIcon />
-//           </Button>
-//         </DropdownMenuTrigger>
-//         <DropdownMenuContent align="end">
-//           <DropdownMenuItem
-//             onClick={() => {
-
-//             }}
-//           >
-//             <PencilIcon className="text-black size-4" />
-//             Edit
-//           </DropdownMenuItem>
-//           <DropdownMenuItem
-//             onClick={() => {
-
-//             }}
-//           >
-//             <TrashIcon className="text-black size-4" />
-//             Remove
-//           </DropdownMenuItem>
-//         </DropdownMenuContent>
-//       </DropdownMenu>
