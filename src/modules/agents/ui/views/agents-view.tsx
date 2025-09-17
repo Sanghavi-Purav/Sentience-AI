@@ -1,11 +1,9 @@
 "use client";
-import { LoadingState } from "@/components/loading-state";
-import { ResponsiveDialogue } from "@/components/responsive-dialogue";
-import { Button } from "@/components/ui/button";
+
 import { useTRPC } from "@/trpc/client";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {  useSuspenseQuery } from "@tanstack/react-query";
 import { DataTable } from "../components/data-table";
-import { columns, Payment } from "../components/columns";
+import { columns } from "../components/columns";
 import { EmptyState } from "@/components/empty-state";
 import { AgentsFilter } from "../../hooks/use-agent-filters";
 import { AgentsPagination } from "../components/agents-pagination";
