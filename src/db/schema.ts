@@ -97,10 +97,11 @@ export const meetings = pgTable("meetings", {
     .references(() => agents.id, { onDelete: "cascade" }),
   transcriptURL: text("transcript_url"),
   recordingURL: text("recording_url"),
-  status: meetingStatus("status").notNull().default("upcoming"),
+  status: meetingStatus("status").notNull().default("active"),
   summary: text("summary"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  startedAt: timestamp("started_at"),
+  scheduledAt: timestamp("scheduled_at", { mode: "date" }),
+  startedAt: timestamp("started_at", { mode: "date" }),
   endedAt: timestamp("ended_at"),
 });

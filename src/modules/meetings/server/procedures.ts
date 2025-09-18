@@ -11,6 +11,7 @@ import {
 } from "@/constants";
 import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
 import { meetingsInsertSchema } from "../schema";
+import { boolean } from "drizzle-orm/gel-core";
 
 export const meetingsRouter = createTRPCRouter({
   getMany: protectedProcedure
@@ -54,7 +55,7 @@ export const meetingsRouter = createTRPCRouter({
                 | "cancelled"
             )
           : undefined,
-      ];
+      ].filter(boolean);
 
       const baseQuery = db
         .select({
@@ -126,9 +127,19 @@ export const meetingsRouter = createTRPCRouter({
         }
       }
 
+      const scheduledTime =
+        input.status === "upcoming" ? new Date(input?.scheduledAt) : new Date();
+      const startTime = input.status === "active" ? new Date() : null;
+
       const [createdMeeting] = await db
         .insert(meetings)
-        .values({ ...input, agentId: input.agentId, userId: ctx.auth.user.id })
+        .values({
+          ...input,
+          agentId: input.agentId,
+          userId: ctx.auth.user.id,
+          scheduledAt: scheduledTime,
+          startedAt: startTime,
+        })
         .returning();
     }),
 });
