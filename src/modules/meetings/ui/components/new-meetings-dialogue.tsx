@@ -2,6 +2,7 @@ import { Dispatch } from "react";
 import { MeetingsGetOne } from "../../types";
 import { ResponsiveDialogue } from "@/components/responsive-dialogue";
 import { Button } from "@/components/ui/button";
+import { MeetingsForm } from "./meetings-form";
 
 interface Props {
   open: boolean;
@@ -26,7 +27,11 @@ export const NewMeetingsDialogue = ({
         title={isEdit ? "Edit Meeting" : "Create Meeting"}
         description={isEdit ? "Edit your Meeting " : "Create a Meeting"}
       >
-        <Button></Button>
+        <MeetingsForm
+          isInstant={isInstant}
+          onSuccess={() => onOpenChange(false)}
+          onCancel={() => onOpenChange(false)}
+        />
       </ResponsiveDialogue>
     </>
   );
