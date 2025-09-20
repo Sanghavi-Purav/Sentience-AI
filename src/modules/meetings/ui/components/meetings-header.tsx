@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar, PlusIcon } from "lucide-react";
+import { Calendar, PlusIcon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { NewMeetingsDialogue } from "./new-meetings-dialogue";
 import { MeetingsFilter } from "../../hooks/use-meetings-filters";
@@ -11,11 +11,26 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { MeetingsSearchFilter } from "./meetings-search-filter";
+import { MeetingsAgentsFilter } from "./meetings-agent-filter";
+import { MeetingsStatusFilter } from "./meetings-status-filter";
+import { DEFAULT_PAGE } from "@/constants";
 
 export const MeetingsHeader = () => {
   const [dialogueOpen, setDialogueOpen] = useState(false);
   const [isInstant, setisInstant] = useState(false);
   const [filters, setFilter] = MeetingsFilter();
+  const hasActiveFilters =
+    !!filters.agentsName || !!filters.search || filters.status !== "all";
+
+  const onClearFilters = () => {
+    setFilter({
+      page: DEFAULT_PAGE,
+      search: "",
+      agentsName: "",
+      status: "all",
+    });
+  };
   return (
     <>
       <NewMeetingsDialogue
@@ -55,6 +70,17 @@ export const MeetingsHeader = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <MeetingsSearchFilter />
+          <MeetingsAgentsFilter />
+          <MeetingsStatusFilter />
+          {hasActiveFilters && (
+            <Button onClick={onClearFilters} variant="outline">
+              {" "}
+              <XCircleIcon /> Clear
+            </Button>
+          )}
         </div>
       </div>
     </>

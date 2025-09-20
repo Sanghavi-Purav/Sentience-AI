@@ -39,7 +39,9 @@ const Page = async ({ searchParams }: Props) => {
               description="This may take a while"
             />
           }
-        ></Suspense>
+        >
+          <MeetingsView />
+        </Suspense>
       </HydrationBoundary>
     </>
   );
