@@ -9,7 +9,7 @@ import {
   MAX_PAGE_SIZE,
   MIN_PAGE_SIZE,
 } from "@/constants";
-import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
 import { meetingsInsertSchema } from "../schema";
 import { boolean } from "drizzle-orm/gel-core";
 
@@ -59,11 +59,14 @@ export const meetingsRouter = createTRPCRouter({
 
       const baseQuery = db
         .select({
-          meetings,
+          ...getTableColumns(meetings),
           agent: {
             id: agents.id,
             name: agents.name,
           },
+          duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as(
+            "duration"
+          ),
         })
         .from(meetings)
         .leftJoin(agents, eq(meetings.agentId, agents.id));
@@ -89,9 +92,13 @@ export const meetingsRouter = createTRPCRouter({
       const [currentMeeting] = await db
         .select({
           ...getTableColumns(meetings),
-          agents: {
+          agent: {
+            id: agents.id,
             name: agents.name,
           },
+          duration: sql<number>`EXTRACT(EPOCH FROM(ended_at-started_at))`.as(
+            "duration"
+          ),
         })
         .from(meetings)
         .leftJoin(agents, eq(meetings.agentId, agents.id))
