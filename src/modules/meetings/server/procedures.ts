@@ -10,7 +10,7 @@ import {
   MIN_PAGE_SIZE,
 } from "@/constants";
 import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
-import { meetingsInsertSchema } from "../schema";
+import { meetingsEditSchema, meetingsInsertSchema } from "../schema";
 import { boolean } from "drizzle-orm/gel-core";
 
 export const meetingsRouter = createTRPCRouter({
@@ -148,5 +148,118 @@ export const meetingsRouter = createTRPCRouter({
           startedAt: startTime,
         })
         .returning();
+    }),
+  ReomveMeeting: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const [removedMeeting] = await db
+        .delete(meetings)
+        .where(
+          and(eq(meetings.id, input.id), eq(meetings.userId, ctx.auth.user.id))
+        )
+        .returning();
+
+      if (!removedMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meeting not found",
+        });
+      }
+    }),
+
+  EditMeeting: protectedProcedure
+    .input(meetingsEditSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { name, agentId, id, scheduledAt, status, makeInstant } = input;
+
+      const [currentMeeting] = await db
+        .select()
+        .from(meetings)
+        .where(and(eq(meetings.id, id), eq(meetings.userId, ctx.auth.user.id)));
+
+      if (!currentMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "Meeting not found or you are not authorized to update this meeting",
+        });
+      }
+      if (agentId != currentMeeting.agentId) {
+        const [agent] = await db
+          .select()
+          .from(agents)
+          .where(
+            and(eq(agents.id, agentId), eq(agents.userId, ctx.auth.user.id))
+          );
+
+        if (!agent) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Selected agent does not exist or does not belong to you",
+          });
+        }
+      }
+
+      type MeetingStatus =
+        | "upcoming"
+        | "active"
+        | "completed"
+        | "processing"
+        | "cancelled";
+
+      const validTransitions: Record<MeetingStatus, MeetingStatus[]> = {
+        completed: [],
+        cancelled: [],
+        processing: ["cancelled"],
+        upcoming: ["active", "cancelled"],
+        active: ["processing", "completed"],
+      };
+      if (
+        currentMeeting.status !== status &&
+        !validTransitions[currentMeeting.status].includes(status)
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `The transition from ${currentMeeting.status} to ${status} is not possible`,
+        });
+      }
+
+      const updateData: any = {
+        name,
+        agentId,
+        updatedAt: new Date(),
+      };
+
+      if (currentMeeting.status !== status) {
+        updateData.status = status;
+      }
+
+      switch (true) {
+        case currentMeeting.status === "upcoming" && status === "active":
+          updateData.startedAt = new Date();
+          updateData.scheduledAt = new Date();
+          break;
+        case currentMeeting.status === "upcoming" && status === "cancelled":
+          updateData.endedAt = new Date();
+          break;
+        case status === "upcoming" && !!scheduledAt:
+          updateData.scheduledAt = scheduledAt;
+          break;
+        case currentMeeting.status === "active" &&
+          (status === "completed" || status === "processing"):
+          updateData.endedAt = new Date();
+          break;
+        case currentMeeting.status === "processing" && status === "cancelled":
+          break;
+        // yet to implement what will be done for status cancelled
+      }
+
+      const [updatedMeeting] = await db
+        .update(meetings)
+        .set(updateData)
+        .where(and(eq(meetings.id, id), eq(meetings.userId, ctx.auth.user.id)))
+        .returning();
+
+      return updatedMeeting;
     }),
 });

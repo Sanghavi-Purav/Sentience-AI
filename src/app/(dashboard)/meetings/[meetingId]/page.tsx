@@ -1,4 +1,5 @@
 import { LoadingState } from "@/components/loading-state";
+import { MeetingsIdView } from "@/modules/meetings/ui/views/meetings-id-view";
 import { getQueryClient, trpc } from "@/trpc/server";
 import {
   dehydrate,
@@ -27,7 +28,9 @@ const Page = async ({ params }: Props) => {
             description="This may take a while"
           />
         }
-      ></Suspense>
+      >
+        <MeetingsIdView meetingId={meetingId} />
+      </Suspense>
     </HydrationBoundary>
   );
 };

@@ -12,7 +12,7 @@ export const MeetingsFilter = () => {
     page: parseAsInteger
       .withDefault(DEFAULT_PAGE)
       .withOptions({ clearOnDefault: true }),
-    agentsName: parseAsString
+    agentName: parseAsString
       .withDefault("")
       .withOptions({ clearOnDefault: true }),
     status: parseAsStringEnum([
