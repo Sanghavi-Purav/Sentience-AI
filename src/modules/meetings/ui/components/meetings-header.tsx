@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MeetingsSearchFilter } from "./meetings-search-filter";
 import { MeetingsAgentsFilter } from "./meetings-agent-filter";
-import { MeetingsStatusFilter } from "./meetings-status-filter";
+import { MeetingsStatusFilter } from "./meetings-status-filter"
 import { DEFAULT_PAGE } from "@/constants";
 
 export const MeetingsHeader = () => {
@@ -21,13 +21,13 @@ export const MeetingsHeader = () => {
   const [isInstant, setisInstant] = useState(false);
   const [filters, setFilter] = MeetingsFilter();
   const hasActiveFilters =
-    !!filters.agentsName || !!filters.search || filters.status !== "all";
+    !!filters.agentName || !!filters.search || filters.status !== "all";
 
   const onClearFilters = () => {
     setFilter({
       page: DEFAULT_PAGE,
       search: "",
-      agentsName: "",
+      agentName: "",
       status: "all",
     });
   };

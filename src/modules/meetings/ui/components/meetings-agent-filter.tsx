@@ -30,14 +30,14 @@ export const MeetingsAgentsFilter = () => {
   );
 
   const selectedAgent = agentsData?.items.find((agent) => {
-    agent.name === filter.agentsName;
+    return agent.name === filter.agentName;
   });
 
   const handleSelect = (agentName: string) => {
-    if (filter.agentsName === agentName) {
-      setFilter({ ...filter, agentsName: "", page: 1 });
+    if (filter.agentName === agentName) {
+      setFilter({ ...filter, agentName: "", page: 1 });
     } else {
-      setFilter({ ...filter, agentsName: agentName, page: 1 });
+      setFilter({ ...filter, agentName: agentName, page: 1 });
     }
     setOpen(false);
   };
@@ -50,10 +50,10 @@ export const MeetingsAgentsFilter = () => {
           aria-expanded={open}
           className={cn(
             "h-9 w-[200px] justify-between bg-white",
-            !filter.agentsName && "text-muted-foreground"
+            !filter.agentName && "text-muted-foreground"
           )}
         >
-          {filter.agentsName && selectedAgent ? (
+          {filter.agentName && selectedAgent ? (
             <div className="flex items-center gap-2 truncate">
               <Image
                 src={`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${selectedAgent.name}`}
@@ -67,7 +67,9 @@ export const MeetingsAgentsFilter = () => {
           ) : (
             <div className="flex items-center gap-2">
               <BotIcon className="size-4" />
-              <span className="text-sm">{!!selectedAgent ? selectedAgent.name : "All Agents"}</span>
+              <span className="text-sm">
+                {!!selectedAgent ? selectedAgent.name : "All Agents"}
+              </span>
             </div>
           )}
           {open ? (
@@ -87,7 +89,7 @@ export const MeetingsAgentsFilter = () => {
               <CommandItem
                 value="all"
                 onSelect={() => {
-                  setFilter({ agentsName: "", page: 1 });
+                  setFilter({ agentName: "", page: 1 });
                   setOpen(false);
                 }}
                 className="cursor-pointer"
@@ -95,7 +97,7 @@ export const MeetingsAgentsFilter = () => {
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    !filter.agentsName ? "opacity-100" : "opacity-0"
+                    !filter.agentName ? "opacity-100" : "opacity-0"
                   )}
                 />
                 <BotIcon className="mr-2 size-4" />
@@ -113,7 +115,7 @@ export const MeetingsAgentsFilter = () => {
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      filter.agentsName === agent.name
+                      filter.agentName === agent.name
                         ? "opacity-100"
                         : "opacity-0"
                     )}
