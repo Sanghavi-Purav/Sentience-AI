@@ -171,7 +171,7 @@ export const meetingsRouter = createTRPCRouter({
             const endTime = new Date(scheduledTime);
             endTime.setHours(endTime.getHours() + 1);
             const googleEvent = await createGoogleCalendarEvent({
-              accessToken: googleAccount.accessToken,
+              userId: ctx.auth.user.id,
               summary: createdMeeting.name,
               startTime: scheduledTime,
               endTime: endTime,
@@ -226,7 +226,7 @@ export const meetingsRouter = createTRPCRouter({
 
         if (googleAccount?.accessToken) {
           await deleteGoogleCalendarEvent({
-            accessToken: googleAccount.accessToken,
+            userId: ctx.auth.user.id,
             eventId: meeting.googlecalendarEventId,
           });
         }
@@ -341,7 +341,7 @@ export const meetingsRouter = createTRPCRouter({
 
         if (googleAccount?.accessToken) {
           await updateGoogleCalendarEvent({
-            accessToken: googleAccount.accessToken,
+            userId: ctx.auth.user.id,
             eventId: currentMeeting.googlecalendarEventId,
             summary: name,
             startTime: scheduledAt

@@ -1,7 +1,8 @@
 import { google } from "googleapis";
+import { refreshGoogleAccessToken } from "./google-refresh-token";
 
 export async function createGoogleCalendarEvent({
-  accessToken,
+  userId,
   summary,
   description,
   startTime,
@@ -9,7 +10,7 @@ export async function createGoogleCalendarEvent({
   attendees = [],
   timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 }: {
-  accessToken: string;
+  userId: string;
   summary: string;
   description?: string;
   startTime: Date;
@@ -17,6 +18,8 @@ export async function createGoogleCalendarEvent({
   attendees?: string[];
   timeZone?: string;
 }) {
+
+  const accessToken=await refreshGoogleAccessToken(userId);
   const oAuth2Client = new google.auth.OAuth2();
   oAuth2Client.setCredentials({ access_token: accessToken });
 
@@ -65,18 +68,20 @@ export async function createGoogleCalendarEvent({
 
 
 export async function updateGoogleCalendarEvent({
-    accessToken,
+    userId,
     eventId,
     summary,
     startTime,
     endTime,
     }: {
-    accessToken: string;
+    userId: string;
     eventId: string;
     summary: string;
     startTime: Date;
     endTime: Date;
 }){
+
+    const accessToken= await refreshGoogleAccessToken(userId);
     const oAuth2Client = new google.auth.OAuth2();
     oAuth2Client.setCredentials({ access_token: accessToken });
 
@@ -107,13 +112,15 @@ export async function updateGoogleCalendarEvent({
 }
 
 export async function deleteGoogleCalendarEvent({
-    accessToken,
+    userId,
     eventId,
 }:{
-    accessToken:string,
+    userId:string,
     eventId:string
 }){
 
+
+    const accessToken= await refreshGoogleAccessToken(userId);
     const oAuth2Client = new google.auth.OAuth2();
     oAuth2Client.setCredentials({access_token:accessToken});
 
