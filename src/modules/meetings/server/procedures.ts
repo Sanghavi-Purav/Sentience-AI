@@ -1,6 +1,11 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import {
+  createGooglecalendarEvent,
+  deleteGooglecalendarEvent,
+  updateGooglecalendarEvent,
+} from "@/lib/google-calender-event";
 import { db } from "@/db";
-import { agents, meetings, user } from "@/db/schema";
+import { account, agents, meetings, user } from "@/db/schema";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -113,6 +118,7 @@ export const meetingsRouter = createTRPCRouter({
       }
       return currentMeeting;
     }),
+
   createMeetings: protectedProcedure
     .input(meetingsInsertSchema)
     .mutation(async ({ input, ctx }) => {
@@ -148,23 +154,80 @@ export const meetingsRouter = createTRPCRouter({
           startedAt: startTime,
         })
         .returning();
+
+      if (input.status === "upcoming") {
+        const [googleAccount] = await db
+          .select()
+          .from(account)
+          .where(
+            and(
+              eq(account.userId, ctx.auth.user.id),
+              eq(account.providerId, "google")
+            )
+          );
+
+        if (googleAccount?.accessToken) {
+          const endTime = new Date(scheduledTime);
+          endTime.setHours(endTime.getHours() + 1);
+          const googleEvent = await createGooglecalendarEvent({
+            accessToken: googleAccount.accessToken,
+            summary: createdMeeting.name,
+            startTime: scheduledTime,
+            endTime: endTime,
+          });
+
+          if (googleEvent.success && googleEvent.eventId) {
+            await db
+              .update(meetings)
+              .set({ googlecalendarEventId: googleEvent.eventId })
+              .where(eq(meetings.id, createdMeeting.id));
+          }
+        }
+      }
+      return createdMeeting;
     }),
+
   ReomveMeeting: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const [meeting] = await db
+        .select()
+        .from(meetings)
+        .where(
+          and(eq(meetings.id, input.id), eq(meetings.userId, ctx.auth.user.id))
+        );
+
+      if (!meeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meeting not found",
+        });
+      }
+
+      if (meeting?.googlecalendarEventId) {
+        const [googleAccount] = await db
+          .select()
+          .from(account)
+          .where(
+            and(
+              eq(account.userId, ctx.auth.user.id),
+              eq(account.providerId, "google")
+            )
+          );
+
+        if (googleAccount?.accessToken) {
+          await deleteGooglecalendarEvent({
+            accessToken: googleAccount.accessToken,
+            eventId: meeting.googlecalendarEventId,
+          });
+        }
+      }
       const [removedMeeting] = await db
         .delete(meetings)
         .where(
           and(eq(meetings.id, input.id), eq(meetings.userId, ctx.auth.user.id))
         )
         .returning();
-
-      if (!removedMeeting) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Meeting not found",
-        });
-      }
     }),
 
   EditMeeting: protectedProcedure
@@ -252,6 +315,32 @@ export const meetingsRouter = createTRPCRouter({
         case currentMeeting.status === "processing" && status === "cancelled":
           break;
         // yet to implement what will be done for status cancelled
+      }
+      if (
+        currentMeeting?.googlecalendarEventId &&
+        (scheduledAt || name !== currentMeeting.name)
+      ) {
+        const [googleAccount] = await db
+          .select()
+          .from(account)
+          .where(
+            and(
+              eq(account.userId, ctx.auth.user.id),
+              eq(account.providerId, "google")
+            )
+          );
+
+        if (googleAccount?.accessToken) {
+          await updateGooglecalendarEvent({
+            accessToken: googleAccount.accessToken,
+            eventId: currentMeeting.googlecalendarEventId,
+            summary: name,
+            startTime: scheduledAt ? new Date(scheduledAt) : currentMeeting.scheduledAt!,
+            endTime: scheduledAt
+              ? new Date(new Date(scheduledAt).getTime() + 60 * 60 * 1000)
+              : new Date(currentMeeting.scheduledAt!.getTime() + 60 * 60 * 1000),
+          });
+        }
       }
 
       const [updatedMeeting] = await db
