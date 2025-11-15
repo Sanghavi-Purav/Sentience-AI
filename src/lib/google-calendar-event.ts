@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 
-export async function createGooglecalendarEvent({
+export async function createGoogleCalendarEvent({
   accessToken,
   summary,
   description,
@@ -64,7 +64,7 @@ export async function createGooglecalendarEvent({
 }
 
 
-export async function updateGooglecalendarEvent({
+export async function updateGoogleCalendarEvent({
     accessToken,
     eventId,
     summary,
@@ -106,7 +106,7 @@ export async function updateGooglecalendarEvent({
     }
 }
 
-export async function deleteGooglecalendarEvent({
+export async function deleteGoogleCalendarEvent({
     accessToken,
     eventId,
 }:{

@@ -1,11 +1,11 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import {
-  createGooglecalendarEvent,
-  deleteGooglecalendarEvent,
-  updateGooglecalendarEvent,
+  createGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
+  updateGoogleCalendarEvent,
 } from "@/lib/google-calendar-event";
 import { db } from "@/db";
-import { account, agents, meetings, user } from "@/db/schema";
+import { account, agents, meetings } from "@/db/schema";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -170,7 +170,7 @@ export const meetingsRouter = createTRPCRouter({
           if (googleAccount?.accessToken) {
             const endTime = new Date(scheduledTime);
             endTime.setHours(endTime.getHours() + 1);
-            const googleEvent = await createGooglecalendarEvent({
+            const googleEvent = await createGoogleCalendarEvent({
               accessToken: googleAccount.accessToken,
               summary: createdMeeting.name,
               startTime: scheduledTime,
@@ -225,7 +225,7 @@ export const meetingsRouter = createTRPCRouter({
           );
 
         if (googleAccount?.accessToken) {
-          await deleteGooglecalendarEvent({
+          await deleteGoogleCalendarEvent({
             accessToken: googleAccount.accessToken,
             eventId: meeting.googlecalendarEventId,
           });
@@ -340,7 +340,7 @@ export const meetingsRouter = createTRPCRouter({
           );
 
         if (googleAccount?.accessToken) {
-          await updateGooglecalendarEvent({
+          await updateGoogleCalendarEvent({
             accessToken: googleAccount.accessToken,
             eventId: currentMeeting.googlecalendarEventId,
             summary: name,
