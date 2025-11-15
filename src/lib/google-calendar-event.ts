@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import { oauth2 } from "googleapis/build/src/apis/oauth2";
 
 export async function createGooglecalendarEvent({
   accessToken,
@@ -8,6 +7,7 @@ export async function createGooglecalendarEvent({
   startTime,
   endTime,
   attendees = [],
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 }: {
   accessToken: string;
   summary: string;
@@ -15,6 +15,7 @@ export async function createGooglecalendarEvent({
   startTime: Date;
   endTime: Date;
   attendees?: string[];
+  timeZone?: string;
 }) {
   const oAuth2Client = new google.auth.OAuth2();
   oAuth2Client.setCredentials({ access_token: accessToken });
@@ -29,11 +30,11 @@ export async function createGooglecalendarEvent({
         description,
         start: {
           dateTime: startTime.toISOString(),
-          timeZone: "America/Los_Angeles",
+          timeZone,
         },
         end: {
           dateTime: endTime.toISOString(),
-          timeZone: "America/Los_Angeles",
+          timeZone,
         },
         attendees: attendees.map((email) => ({ email })),
         reminders: {

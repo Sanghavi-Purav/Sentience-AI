@@ -3,7 +3,7 @@ import {
   createGooglecalendarEvent,
   deleteGooglecalendarEvent,
   updateGooglecalendarEvent,
-} from "@/lib/google-calender-event";
+} from "@/lib/google-calendar-event";
 import { db } from "@/db";
 import { account, agents, meetings, user } from "@/db/schema";
 import { z } from "zod";
@@ -156,32 +156,41 @@ export const meetingsRouter = createTRPCRouter({
         .returning();
 
       if (input.status === "upcoming") {
-        const [googleAccount] = await db
-          .select()
-          .from(account)
-          .where(
-            and(
-              eq(account.userId, ctx.auth.user.id),
-              eq(account.providerId, "google")
-            )
-          );
+        try {
+          const [googleAccount] = await db
+            .select()
+            .from(account)
+            .where(
+              and(
+                eq(account.userId, ctx.auth.user.id),
+                eq(account.providerId, "google")
+              )
+            );
 
-        if (googleAccount?.accessToken) {
-          const endTime = new Date(scheduledTime);
-          endTime.setHours(endTime.getHours() + 1);
-          const googleEvent = await createGooglecalendarEvent({
-            accessToken: googleAccount.accessToken,
-            summary: createdMeeting.name,
-            startTime: scheduledTime,
-            endTime: endTime,
-          });
+          if (googleAccount?.accessToken) {
+            const endTime = new Date(scheduledTime);
+            endTime.setHours(endTime.getHours() + 1);
+            const googleEvent = await createGooglecalendarEvent({
+              accessToken: googleAccount.accessToken,
+              summary: createdMeeting.name,
+              startTime: scheduledTime,
+              endTime: endTime,
+            });
 
-          if (googleEvent.success && googleEvent.eventId) {
-            await db
-              .update(meetings)
-              .set({ googlecalendarEventId: googleEvent.eventId })
-              .where(eq(meetings.id, createdMeeting.id));
+            if (googleEvent.success && googleEvent.eventId) {
+              await db
+                .update(meetings)
+                .set({ googlecalendarEventId: googleEvent.eventId })
+                .where(eq(meetings.id, createdMeeting.id));
+            } else {
+              console.error(
+                "Failed to create Google Calendar event:",
+                googleEvent.error
+              );
+            }
           }
+        } catch (error) {
+          console.error("Error while creating Google Calendar event", error);
         }
       }
       return createdMeeting;
@@ -335,10 +344,14 @@ export const meetingsRouter = createTRPCRouter({
             accessToken: googleAccount.accessToken,
             eventId: currentMeeting.googlecalendarEventId,
             summary: name,
-            startTime: scheduledAt ? new Date(scheduledAt) : currentMeeting.scheduledAt!,
+            startTime: scheduledAt
+              ? new Date(scheduledAt)
+              : currentMeeting.scheduledAt!,
             endTime: scheduledAt
               ? new Date(new Date(scheduledAt).getTime() + 60 * 60 * 1000)
-              : new Date(currentMeeting.scheduledAt!.getTime() + 60 * 60 * 1000),
+              : new Date(
+                  currentMeeting.scheduledAt!.getTime() + 60 * 60 * 1000
+                ),
           });
         }
       }
