@@ -80,7 +80,7 @@ export const MeetingsTimeDropdown = ({ field }: Props) => {
       <PopoverTrigger asChild>
         <FormControl>
           <Button
-            type="button" // Prevent form submission
+            type="button" 
             variant="outline"
             className={cn(
               "w-full justify-start text-left font-normal",

@@ -104,4 +104,5 @@ export const meetings = pgTable("meetings", {
   scheduledAt: timestamp("scheduled_at", { mode: "date" }),
   startedAt: timestamp("started_at", { mode: "date" }),
   endedAt: timestamp("ended_at"),
+  googlecalendarEventId:text("google_calendar_event_id"),
 });
